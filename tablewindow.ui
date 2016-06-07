@@ -20,6 +20,9 @@
       <property name="rowCount">
        <number>100</number>
       </property>
+      <attribute name="verticalHeaderCascadingSectionResizes">
+       <bool>false</bool>
+      </attribute>
       <row/>
       <row/>
       <row/>
@@ -152,7 +155,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDir>
+
+class QTreeWidgetItem;
 
 namespace Ui {
   class MainWindow;
@@ -16,13 +19,17 @@ public:
   ~MainWindow();
 
 private slots:
-  void on_pushButton_clicked();
+  void on_pb_setFolder_clicked();
 
-  void on_pushButton_2_clicked();
+  void on_pb_addFolderContents_clicked();
 
-  void on_pushButton_3_clicked();
+  void on_pbGo_clicked();
 
 private:
+  void addItems(QDir a_dir, QTreeWidgetItem* a_parent);
+  QByteArray getFileHash(QString fileName);
+  bool compareFiles(QString f1, QString f2);
+
   Ui::MainWindow *ui;
   QStringList m_fileNames;
   QString m_folder;

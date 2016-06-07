@@ -6,7 +6,6 @@
 #include <QtConcurrent/QtConcurrent>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "tablewindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),

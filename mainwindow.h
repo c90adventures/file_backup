@@ -26,13 +26,15 @@ private slots:
   void on_pbGo_clicked();
 
 private:
-  void addItems(QDir a_dir, QTreeWidgetItem* a_parent);
-  QByteArray getFileHash(QString fileName);
+  int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
+  QByteArray getFileHash(QFile &file);
   bool compareFiles(QString f1, QString f2);
+  void startWorking();
 
   Ui::MainWindow *ui;
   QStringList m_fileNames;
   QString m_folder;
+  int m_itemsCount;
 };
 
 #endif // MAINWINDOW_H

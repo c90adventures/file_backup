@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QCryptographicHash>
 #include <QDirIterator>
+#include <QtConcurrent/QtConcurrent>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "tablewindow.h"
@@ -26,14 +27,16 @@ void MainWindow::on_pb_addFolderContents_clicked()
                                                            QFileDialog::ShowDirsOnly
                                                            | QFileDialog::DontResolveSymlinks);
   QDir dir(sDir);
-  addItems(dir, NULL) ;
+  m_itemsCount = addItems(dir, NULL);
 }
 
-void MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
+int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
 {
   a_dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::Dirs | QDir::NoDotAndDotDot);
   a_dir.setSorting(QDir::Type);
   QFileInfoList list = a_dir.entryInfoList();
+
+  int itemsAdded = 0;
 
   for (int i = 0; i < list.size(); ++i)
   {
@@ -57,10 +60,13 @@ void MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
     if (true == file.isDir())
     {
       a_dir.cd(file.baseName());
-      addItems(a_dir, child) ;
+      itemsAdded += addItems(a_dir, child) ;
       a_dir.cdUp();
+    } else {
+      itemsAdded++;
     }
   }
+  return itemsAdded;
 }
 
 void MainWindow::on_pb_setFolder_clicked()
@@ -75,29 +81,42 @@ void MainWindow::on_pb_setFolder_clicked()
   m_folder = dir;
 }
 
-QByteArray MainWindow::getFileHash(QString fileName)
+QByteArray MainWindow::getFileHash(QFile &file)
 {
   QCryptographicHash hash(QCryptographicHash::Sha1);
 
-  QFile file(fileName);
   if (file.open(QIODevice::ReadOnly)) {
     hash.addData(file.readAll());
   } else {
-    qWarning() << "File couldn't be opened. " << fileName;
+    qWarning() << "File couldn't be opened. " << file.fileName();
   }
   return hash.result();
 }
 
 bool MainWindow::compareFiles(QString f1, QString f2)
 {
-  QByteArray hash1 = getFileHash(f1), hash2 = getFileHash(f2);
-  return hash1 == hash2;
+  QFile file1(f1), file2(f2);
+  if (file1.size() == file2.size()) {
+    QByteArray hash1 = getFileHash(file1), hash2 = getFileHash(file2);
+    return hash1 == hash2;
+  } else {
+    // qDebug() << "size mismatch" << file1.fileName() << " " << file2.fileName();
+  }
+  return false;
 }
 
 void MainWindow::on_pbGo_clicked()
 {
+  QtConcurrent::run(this, &MainWindow::startWorking);
+}
+
+void MainWindow::startWorking()
+{
+  QMetaObject::invokeMethod(ui->progressBar, "setRange", Qt::QueuedConnection, Q_ARG(int, 0), Q_ARG(int, m_itemsCount));
+
   //foreach entry in table, search for it in the folder
   QTreeWidgetItemIterator treeIt(ui->treeWidget);
+  int itemsProcessed = 0;
   while (*treeIt) {
     //if ((*treeIt)->text(1) == "") {
     QFileInfo qfi((*treeIt)->text(0));
@@ -108,8 +127,7 @@ void MainWindow::on_pbGo_clicked()
 
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
       while (dirIt.hasNext()) {
-        if (dirIt.filePath() == "")
-          break;
+        dirIt.next();
         foundFiles << dirIt.filePath();
       }
 
@@ -129,7 +147,10 @@ void MainWindow::on_pbGo_clicked()
       }
 
       (*treeIt)->setText(1, str);
+      itemsProcessed++;
+      QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
     } // else
   ++treeIt;
   }
+  qDebug() << m_itemsCount << " " << itemsProcessed;
 }

@@ -82,27 +82,27 @@ void MainWindow::on_pb_setFolder_clicked()
 
 QByteArray MainWindow::getFileHash(QFile &file)
 {
-  qDebug() << Q_FUNC_INFO << " start";
   QCryptographicHash hash(QCryptographicHash::Sha1);
 
   if (file.open(QIODevice::ReadOnly)) {
-//    qDebug() << "  reading starts...."  ;
-    while(!file.atEnd()){
+    while (!file.atEnd()) {
       hash.addData(file.read(8192));
     }
-//    qDebug() << "  ends."  ;
   } else {
     qWarning() << "File couldn't be opened. " << file.fileName();
   }
-  qDebug() << Q_FUNC_INFO << " end.";
   return hash.result();
 }
 
-bool MainWindow::compareFiles(QString f1, QString f2)
+// @args if hash1 is not empty, it will be assumed that it is a hash for file1
+//       if it is empty, it will be filled, so that it can be reZused in the future
+bool MainWindow::compareFiles(QString f1, QString f2, QByteArray &hash1)
 {
   QFile file1(f1), file2(f2);
-  if (file1.size() == file2.size()) {
-    QByteArray hash1 = getFileHash(file1), hash2 = getFileHash(file2);
+  if (file1.size() == file2.size())
+  {
+    hash1 = hash1.size() ? hash1 : getFileHash(file1);
+    QByteArray hash2 = getFileHash(file2);
     return hash1 == hash2;
   } else {
     // qDebug() << "size mismatch" << file1.fileName() << " " << file2.fileName();
@@ -130,18 +130,16 @@ void MainWindow::startWorking()
     } else {
       QStringList foundFiles;
 
-      qDebug() << "Creating iterator...";
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
-      qDebug() << "Iterator ready";
       while (dirIt.hasNext()) {
         dirIt.next();
         foundFiles << dirIt.filePath();
       }
-      qDebug() << "Found " << foundFiles.size() << " files";
 
       QStringList sameFiles;
+      QByteArray hashOfSourceFile;
       for (int i = 0; i < foundFiles.size(); i++) {
-        if (compareFiles((*treeIt)->text(0), foundFiles[i])) {
+        if (compareFiles((*treeIt)->text(0), foundFiles[i], hashOfSourceFile)) {
           sameFiles << foundFiles[i];
         }
       }

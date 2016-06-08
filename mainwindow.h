@@ -28,7 +28,7 @@ private slots:
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
   QByteArray getFileHash(QFile &file);
-  bool compareFiles(QString f1, QString f2);
+  bool compareFiles(QString f1, QString f2, QByteArray &hash1);
   void startWorking();
 
   Ui::MainWindow *ui;

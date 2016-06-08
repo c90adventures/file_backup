@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow)
 {
   ui->setupUi(this);
+  qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
 }
 
 MainWindow::~MainWindow()
@@ -82,15 +83,26 @@ void MainWindow::on_pb_setFolder_clicked()
 
 QByteArray MainWindow::getFileHash(QFile &file)
 {
+  QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Getting hash for %1: %2%").arg(file.fileName()).arg(percentage)));
   QCryptographicHash hash(QCryptographicHash::Sha1);
+
+  int chunkSize = 8192;
+  //int chunksRead = 0;
+  //int totalChunks = file.size() / chunkSize;
 
   if (file.open(QIODevice::ReadOnly)) {
     while (!file.atEnd()) {
-      hash.addData(file.read(8192));
+      chunksRead++;
+      hash.addData(file.read(chunkSize));
+      //if (chunksRead/totalChunks*100 - percentage >= 5) {
+      //  percentage = chunksRead/totalChunks*100;
+      //  QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Getting hash for %1: %2%").arg(file.fileName()).arg(percentage)));
+      //}
     }
   } else {
     qWarning() << "File couldn't be opened. " << file.fileName();
   }
+  file.close();
   return hash.result();
 }
 
@@ -129,13 +141,16 @@ void MainWindow::startWorking()
       // (*treeIt)->setText(1, "It's a folder.");
     } else {
       QStringList foundFiles;
+      qDebug() << "Searching for " << (*treeIt)->text(0) << "...";
 
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
+      qDebug() << "  (iterator created)";
       while (dirIt.hasNext()) {
         dirIt.next();
         foundFiles << dirIt.filePath();
       }
 
+      qDebug() << "  comparing to " << foundFiles.size() << "files...";
       QStringList sameFiles;
       QByteArray hashOfSourceFile;
       for (int i = 0; i < foundFiles.size(); i++) {
@@ -143,6 +158,8 @@ void MainWindow::startWorking()
           sameFiles << foundFiles[i];
         }
       }
+
+      qDebug() << "Found " << sameFiles.size() << " same files for file " << (*treeIt)->text(0);
 
       // what to do if multiple files have been found?
       QString str;
@@ -152,11 +169,19 @@ void MainWindow::startWorking()
         str = "Not found.";
       }
 
-      (*treeIt)->setText(1, str);
+
+      // INVOKE slot in MAINWINDOW
+      QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, (*treeIt)), Q_ARG(int, 1), Q_ARG(QString, str));
       itemsProcessed++;
       QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
     } // else
   ++treeIt;
   }
   qDebug() << m_itemsCount << " " << itemsProcessed;
+}
+
+
+void MainWindow::setItemTextInTable(QTreeWidgetItem* item, int col, QString str)
+{
+  item->setText(col, str);
 }

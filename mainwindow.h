@@ -20,10 +20,9 @@ public:
 
 private slots:
   void on_pb_setFolder_clicked();
-
   void on_pb_addFolderContents_clicked();
-
   void on_pbGo_clicked();
+  void setItemTextInTable(QTreeWidgetItem *item, int col, QString str);
 
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);

@@ -83,21 +83,14 @@ void MainWindow::on_pb_setFolder_clicked()
 
 QByteArray MainWindow::getFileHash(QFile &file)
 {
-  QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Getting hash for %1: %2%").arg(file.fileName()).arg(percentage)));
+  QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Getting hash for %1...").arg(file.fileName())));
   QCryptographicHash hash(QCryptographicHash::Sha1);
 
   int chunkSize = 8192;
-  //int chunksRead = 0;
-  //int totalChunks = file.size() / chunkSize;
 
   if (file.open(QIODevice::ReadOnly)) {
     while (!file.atEnd()) {
-      chunksRead++;
       hash.addData(file.read(chunkSize));
-      //if (chunksRead/totalChunks*100 - percentage >= 5) {
-      //  percentage = chunksRead/totalChunks*100;
-      //  QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Getting hash for %1: %2%").arg(file.fileName()).arg(percentage)));
-      //}
     }
   } else {
     qWarning() << "File couldn't be opened. " << file.fileName();
@@ -137,9 +130,7 @@ void MainWindow::startWorking()
   while (*treeIt) {
     //if ((*treeIt)->text(1) == "") {
     QFileInfo qfi((*treeIt)->text(0));
-    if (qfi.isDir()) {
-      // (*treeIt)->setText(1, "It's a folder.");
-    } else {
+    if (!qfi.isDir()) {
       QStringList foundFiles;
       qDebug() << "Searching for " << (*treeIt)->text(0) << "...";
 
@@ -170,11 +161,10 @@ void MainWindow::startWorking()
       }
 
 
-      // INVOKE slot in MAINWINDOW
       QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, (*treeIt)), Q_ARG(int, 1), Q_ARG(QString, str));
-      itemsProcessed++;
       QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
-    } // else
+      itemsProcessed++;
+    } // if (!qfi.isDir())
   ++treeIt;
   }
   qDebug() << m_itemsCount << " " << itemsProcessed;

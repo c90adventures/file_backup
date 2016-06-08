@@ -59,9 +59,12 @@ int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
 
     if (true == file.isDir())
     {
-      a_dir.cd(file.baseName());
-      itemsAdded += addItems(a_dir, child) ;
-      a_dir.cdUp();
+      if (false == a_dir.cd(file.fileName())) {
+        qCritical() << "Failed to open " << file.fileName();
+      } else {
+        itemsAdded += addItems(a_dir, child) ;
+        a_dir.cdUp();
+      }
     } else {
       itemsAdded++;
     }
@@ -136,6 +139,7 @@ void MainWindow::startWorking()
 
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
       qDebug() << "  (iterator created)";
+      QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
       while (dirIt.hasNext()) {
         dirIt.next();
         foundFiles << dirIt.filePath();

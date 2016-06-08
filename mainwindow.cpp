@@ -82,13 +82,19 @@ void MainWindow::on_pb_setFolder_clicked()
 
 QByteArray MainWindow::getFileHash(QFile &file)
 {
+  qDebug() << Q_FUNC_INFO << " start";
   QCryptographicHash hash(QCryptographicHash::Sha1);
 
   if (file.open(QIODevice::ReadOnly)) {
-    hash.addData(file.readAll());
+//    qDebug() << "  reading starts...."  ;
+    while(!file.atEnd()){
+      hash.addData(file.read(8192));
+    }
+//    qDebug() << "  ends."  ;
   } else {
     qWarning() << "File couldn't be opened. " << file.fileName();
   }
+  qDebug() << Q_FUNC_INFO << " end.";
   return hash.result();
 }
 
@@ -124,11 +130,14 @@ void MainWindow::startWorking()
     } else {
       QStringList foundFiles;
 
+      qDebug() << "Creating iterator...";
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
+      qDebug() << "Iterator ready";
       while (dirIt.hasNext()) {
         dirIt.next();
         foundFiles << dirIt.filePath();
       }
+      qDebug() << "Found " << foundFiles.size() << " files";
 
       QStringList sameFiles;
       for (int i = 0; i < foundFiles.size(); i++) {

@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
   ui->setupUi(this);
   qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
+  setWindowTitle(tr("Ed's duplicate files finder, build from %1, %2").arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
 }
 
 MainWindow::~MainWindow()

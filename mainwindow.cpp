@@ -4,7 +4,7 @@
 #include <QCryptographicHash>
 #include <QDirIterator>
 #include <QtConcurrent/QtConcurrent>
-#include <iostream>
+#include <QMessageBox>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -128,9 +128,14 @@ void MainWindow::startWorking()
   //foreach entry in table, search for it in the folder
   QTreeWidgetItemIterator treeIt(ui->treeWidget);
   int itemsProcessed = 0;
+  m_notFoundCount = 0;
+  m_totalFilesCount = 0;
+
   while (*treeIt) {
     QFileInfo qfi((*treeIt)->text(0));
     if (!qfi.isDir()) {
+      m_totalFilesCount++;
+
       QStringList foundFiles;
       qDebug() << "Searching for " << (*treeIt)->text(0) << "...";
 
@@ -158,6 +163,7 @@ void MainWindow::startWorking()
         str = tr("(%1) %2").arg(QString::number(sameFiles.size())).arg(sameFiles.join(", "));
       } else {
         str = STR_NOT_FOUND;
+        m_notFoundCount++;
       }
 
       QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, (*treeIt)), Q_ARG(int, 1), Q_ARG(QString, str));
@@ -177,6 +183,12 @@ void MainWindow::colorizeResults()
   for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++) {
     determineTreeItemColor(ui->treeWidget->topLevelItem(i));
   }
+
+  QMessageBox msgBox;
+  msgBox.setText(tr("Searched for:\t%1 file(s).\nSuccesfully found:\t%2 file(s).\nCould not find:\t%3 file(s).")
+      .arg(m_totalFilesCount).arg(m_totalFilesCount - m_notFoundCount).arg(m_notFoundCount));
+  msgBox.setStandardButtons(QMessageBox::Ok);
+  msgBox.exec();
 }
 
 // if item is a file, decision is based on right column
@@ -197,7 +209,7 @@ bool MainWindow::determineTreeItemColor(QTreeWidgetItem* item)
   }
 
   if (amIGreen) {
-    item->setBackgroundColor(0, QColor(Qt::green));
+    item->setBackgroundColor(0, QColor("#7CB470")); //479030
   } else {
     item->setBackgroundColor(0, QColor(Qt::red));
   }

@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = ed_march_is_a_penis
+TARGET = marched
 TEMPLATE = app
 
 

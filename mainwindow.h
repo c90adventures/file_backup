@@ -35,7 +35,7 @@ private:
   Ui::MainWindow *ui;
   QStringList m_fileNames;
   QString m_folder;
-  int m_itemsCount;
+  int m_itemsCount, m_notFoundCount, m_totalFilesCount;
 
   const QString STR_NOT_FOUND;
 

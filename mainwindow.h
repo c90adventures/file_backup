@@ -36,6 +36,7 @@ private:
   QStringList m_fileNames;
   QString m_folder;
   int m_itemsCount, m_notFoundCount, m_totalFilesCount;
+  QColor m_foundColor, m_notFoundColor;
 
   const QString STR_NOT_FOUND;
 

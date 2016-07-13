@@ -13,6 +13,10 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow),
   STR_NOT_FOUND("Not found.")
 {
+  QSettings settings("./marched.ini", QSettings::IniFormat);
+  m_foundColor = QColor(settings.value("foundColor", "#449333").toString());
+  m_notFoundColor = QColor(settings.value("notFoundColor", "#FD0600").toString());
+
   ui->setupUi(this);
   qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
   setWindowTitle(tr("Ed's duplicate files finder, build from %1, %2").arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
@@ -209,9 +213,9 @@ bool MainWindow::determineTreeItemColor(QTreeWidgetItem* item)
   }
 
   if (amIGreen) {
-    item->setBackgroundColor(0, QColor("#7CB470")); //479030
+    item->setBackgroundColor(0, m_foundColor);
   } else {
-    item->setBackgroundColor(0, QColor(Qt::red));
+    item->setBackgroundColor(0, m_notFoundColor);
   }
   return amIGreen;
 }

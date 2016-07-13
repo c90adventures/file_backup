@@ -6,6 +6,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QMessageBox>
 #include <QMenu>
+#include <QFuture>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -150,26 +151,17 @@ bool MainWindow::compareFiles(QString f1, QString f2, QByteArray &hash1)
 
 void MainWindow::on_pbGo_clicked()
 {
-  QFuture<void> future = QtConcurrent::run(this, &MainWindow::startWorking);
+  QtConcurrent::run(this, &MainWindow::startWorking);
 }
 
-void MainWindow::startWorking()
+void MainWindow::findDuplicates(QList<QTreeWidgetItem*> listOfItems)
 {
-  QMetaObject::invokeMethod(ui->progressBar, "setRange", Qt::QueuedConnection, Q_ARG(int, 0), Q_ARG(int, m_itemsCount));
-
-  //foreach entry in table, search for it in the folder
-  QTreeWidgetItemIterator treeIt(ui->treeWidget);
-  int itemsProcessed = 0;
-  m_notFoundCount = 0;
-  m_totalFilesCount = 0;
-
-  while (*treeIt) {
-    QFileInfo qfi((*treeIt)->text(0));
+  for (int m = 0; m < listOfItems.length(); m++) {
+    QFileInfo qfi(listOfItems[m]->text(0));
     if (!qfi.isDir()) {
-      m_totalFilesCount++;
 
       QStringList foundFiles;
-      qDebug() << "Searching for " << (*treeIt)->text(0) << "...";
+      qDebug() << "Searching for " << listOfItems[m]->text(0) << "...";
 
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
       QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
@@ -182,12 +174,12 @@ void MainWindow::startWorking()
       QStringList sameFiles;
       QByteArray hashOfSourceFile;
       for (int i = 0; i < foundFiles.size(); i++) {
-        if (compareFiles((*treeIt)->text(0), foundFiles[i], hashOfSourceFile)) {
+        if (compareFiles(listOfItems[m]->text(0), foundFiles[i], hashOfSourceFile)) {
           sameFiles << foundFiles[i];
         }
       }
 
-      qDebug() << "Found " << sameFiles.size() << " same files for file " << (*treeIt)->text(0);
+      qDebug() << "Found " << sameFiles.size() << " same files for file " << listOfItems[m]->text(0);
 
       // what to do if multiple files have been found:
       QString str;
@@ -195,15 +187,47 @@ void MainWindow::startWorking()
         str = tr("(%1) %2").arg(QString::number(sameFiles.size())).arg(sameFiles.join(", "));
       } else {
         str = STR_NOT_FOUND;
-        m_notFoundCount++;
       }
 
-      QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, (*treeIt)), Q_ARG(int, 1), Q_ARG(QString, str));
-      QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
-      itemsProcessed++;
+      QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, listOfItems[m]), Q_ARG(int, 1), Q_ARG(QString, str));
+//      QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
+//      itemsProcessed++;
     } // if (!qfi.isDir())
-  ++treeIt;
   }
+}
+
+void MainWindow::startWorking()
+{
+  QMetaObject::invokeMethod(ui->progressBar, "setRange", Qt::QueuedConnection, Q_ARG(int, 0), Q_ARG(int, m_itemsCount));
+
+  QList<QTreeWidgetItem*> filesList;
+  QTreeWidgetItemIterator treeIt(ui->treeWidget);
+  int coresCount = QThread::idealThreadCount();
+  m_totalFilesCount = 0;
+
+  while (*treeIt) {
+    if ((*treeIt)->childCount() == 0) {
+      m_totalFilesCount++;
+      filesList.push_back(*treeIt);
+    }
+    ++treeIt;
+  }
+
+  int chunkSize = ceil(double(filesList.length()) / double(coresCount));
+  QList< QList<QTreeWidgetItem*> > splitFilesList;
+  QList< QFuture<void> > futures;
+  for (int i = 0; i < coresCount; i++) {
+    splitFilesList.push_back(filesList.mid(i * chunkSize, chunkSize));
+  }
+
+  for (int i = 0; i < coresCount; i++) {
+    futures.push_back(QtConcurrent::run(this, &MainWindow::findDuplicates, splitFilesList[i]));
+  }
+
+  for (int i = 0; i < coresCount; i++) {
+    futures[i].waitForFinished();
+  }
+
   QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, m_itemsCount));  // set progressbar to 100%
 
   // main work is done, go back to main thread

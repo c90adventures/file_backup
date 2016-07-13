@@ -31,7 +31,8 @@ private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
   QByteArray getFileHash(QFile &file);
   bool compareFiles(QString f1, QString f2, QByteArray &hash1);
-  void startWorking();
+  void startWorking();  
+  void findDuplicates(QList<QTreeWidgetItem*> listOfItems);
   bool determineTreeItemColor(QTreeWidgetItem *item);
 
   Ui::MainWindow *ui;

@@ -24,6 +24,8 @@ private slots:
   void on_pbGo_clicked();
   void setItemTextInTable(QTreeWidgetItem *item, int col, QString str);
   void colorizeResults();
+  void showContextMenu(const QPoint & pos);
+  void showAbout();
 
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
@@ -38,7 +40,7 @@ private:
   int m_itemsCount, m_notFoundCount, m_totalFilesCount;
   QColor m_foundColor, m_notFoundColor;
 
-  const QString STR_NOT_FOUND;
+  const QString STR_NOT_FOUND, STR_PROGRAM_NAME;
 
 signals:
   void comparingComplete();

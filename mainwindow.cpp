@@ -5,13 +5,15 @@
 #include <QDirIterator>
 #include <QtConcurrent/QtConcurrent>
 #include <QMessageBox>
+#include <QMenu>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
   ui(new Ui::MainWindow),
-  STR_NOT_FOUND("Not found.")
+  STR_NOT_FOUND("Not found."),
+  STR_PROGRAM_NAME("Ed's duplicate files finder")
 {
   QSettings settings("./marched.ini", QSettings::IniFormat);
   m_foundColor = QColor(settings.value("foundColor", "#449333").toString());
@@ -19,13 +21,39 @@ MainWindow::MainWindow(QWidget *parent) :
 
   ui->setupUi(this);
   qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
-  setWindowTitle(tr("Ed's duplicate files finder, build from %1, %2").arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
+  setWindowTitle(tr("%1, build from %2, %3").arg(STR_PROGRAM_NAME).arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
   connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
+
+  this->setContextMenuPolicy(Qt::CustomContextMenu);
+
+  connect(this, SIGNAL(customContextMenuRequested(const QPoint &)),
+          this, SLOT(showContextMenu(const QPoint &)));
 }
 
 MainWindow::~MainWindow()
 {
   delete ui;
+}
+
+void MainWindow::showContextMenu(const QPoint & pos)
+{
+  QMenu contextMenu(tr("Context menu"), this);
+
+  QAction actionAbout("About..", this);
+  connect(&actionAbout, SIGNAL(triggered()), this, SLOT(showAbout()));
+  contextMenu.addAction(&actionAbout);
+  contextMenu.exec(mapToGlobal(pos));
+}
+
+void MainWindow::showAbout()
+{
+  QMessageBox msgBox(this);
+  msgBox.setWindowTitle("About");
+  msgBox.setTextFormat(Qt::RichText);   //this is what makes the links clickable
+  msgBox.setText(tr("%1 was designed by Ed March and created by Marek Panek in 2016.<br>"
+                    "Project page and source code can be found <a href='https://gitlab.com/MarPan/marched'>here</a>.<br>"
+                    "Go visit <a href='http://www.c90adventures.co.uk/'>Ed's page</a>, watch his <a href='https://www.youtube.com/user/c90adventures'>films</a> or find him on <a href='https://www.facebook.com/edwin.march'>Facebook</a>!").arg(STR_PROGRAM_NAME));
+  msgBox.exec();
 }
 
 void MainWindow::on_pb_addFolderContents_clicked()

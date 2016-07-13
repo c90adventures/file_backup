@@ -76,7 +76,7 @@ int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
 void MainWindow::on_pb_setFolder_clicked()
 {
   QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
-                                               "/home/mapn",
+                                               "",
                                                QFileDialog::ShowDirsOnly
                                                | QFileDialog::DontResolveSymlinks);
 
@@ -132,7 +132,6 @@ void MainWindow::startWorking()
   QTreeWidgetItemIterator treeIt(ui->treeWidget);
   int itemsProcessed = 0;
   while (*treeIt) {
-    //if ((*treeIt)->text(1) == "") {
     QFileInfo qfi((*treeIt)->text(0));
     if (!qfi.isDir()) {
       QStringList foundFiles;
@@ -172,6 +171,7 @@ void MainWindow::startWorking()
     } // if (!qfi.isDir())
   ++treeIt;
   }
+  QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, m_itemsCount));  // set progressbar to 100%
   qDebug() << m_itemsCount << " " << itemsProcessed;
 }
 

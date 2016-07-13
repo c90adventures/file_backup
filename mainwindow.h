@@ -23,6 +23,7 @@ private slots:
   void on_pb_addFolderContents_clicked();
   void on_pbGo_clicked();
   void setItemTextInTable(QTreeWidgetItem *item, int col, QString str);
+  void colorizeResults();
 
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
@@ -34,6 +35,9 @@ private:
   QStringList m_fileNames;
   QString m_folder;
   int m_itemsCount;
+
+signals:
+  void comparingComplete();
 };
 
 #endif // MAINWINDOW_H

@@ -4,6 +4,7 @@
 #include <QCryptographicHash>
 #include <QDirIterator>
 #include <QtConcurrent/QtConcurrent>
+#include <iostream>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
@@ -14,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->setupUi(this);
   qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
   setWindowTitle(tr("Ed's duplicate files finder, build from %1, %2").arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
+  connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
 }
 
 MainWindow::~MainWindow()
@@ -34,7 +36,7 @@ void MainWindow::on_pb_addFolderContents_clicked()
 int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
 {
   a_dir.setFilter(QDir::Files | QDir::NoSymLinks | QDir::Dirs | QDir::NoDotAndDotDot);
-  a_dir.setSorting(QDir::Type);
+  a_dir.setSorting(QDir::DirsLast);
   QFileInfoList list = a_dir.entryInfoList();
 
   int itemsAdded = 0;
@@ -42,24 +44,19 @@ int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
   for (int i = 0; i < list.size(); ++i)
   {
     QFileInfo file = list.at(i);
-//    qDebug() << qPrintable( QString("%1 %2").arg(file.size(), 10).arg(file.fileName()) );
 
     QTreeWidgetItem* child = NULL;
-    if (a_parent == NULL)
-    {
+    if (a_parent == NULL) {
       child = new QTreeWidgetItem(ui->treeWidget);
       child->setText(0, file.absoluteFilePath());
       ui->treeWidget->addTopLevelItem(child);
-    }
-    else
-    {
+    } else {
       child = new QTreeWidgetItem();
       child->setText(0, file.absoluteFilePath());
       a_parent->addChild(child);
     }
 
-    if (true == file.isDir())
-    {
+    if (true == file.isDir()) {
       if (false == a_dir.cd(file.fileName())) {
         qCritical() << "Failed to open " << file.fileName();
       } else {
@@ -121,7 +118,7 @@ bool MainWindow::compareFiles(QString f1, QString f2, QByteArray &hash1)
 
 void MainWindow::on_pbGo_clicked()
 {
-  QtConcurrent::run(this, &MainWindow::startWorking);
+  QFuture<void> future = QtConcurrent::run(this, &MainWindow::startWorking);
 }
 
 void MainWindow::startWorking()
@@ -138,7 +135,6 @@ void MainWindow::startWorking()
       qDebug() << "Searching for " << (*treeIt)->text(0) << "...";
 
       QDirIterator dirIt(m_folder, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
-      qDebug() << "  (iterator created)";
       QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
       while (dirIt.hasNext()) {
         dirIt.next();
@@ -172,7 +168,18 @@ void MainWindow::startWorking()
   ++treeIt;
   }
   QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, m_itemsCount));  // set progressbar to 100%
-  qDebug() << m_itemsCount << " " << itemsProcessed;
+
+  // main work is done, go back to main thread
+  emit comparingComplete();
+}
+
+void MainWindow::colorizeResults()
+{
+  // I can either sent some model data from startWorking() (and be done with 'invokeMethod' calls)
+  // or I could go through treeWidgetItems again here
+
+  // Whole folder contents found - green. Else red.
+  // Files too.
 }
 
 

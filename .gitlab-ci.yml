@@ -1,8 +1,10 @@
 before_script:
-  - apt-get update -qq && apt-get install -y -qq qtbase5-dev
+  - apt-get update -qq && apt-get install -y -qq qtbase5-dev qt5-default
+  - which qmake
+  - qtchooser -l
 
 build_linux:
    stage: build
    script:
       - qmake marched.pro
-      - make
+      - make  

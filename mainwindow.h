@@ -30,11 +30,14 @@ private:
   QByteArray getFileHash(QFile &file);
   bool compareFiles(QString f1, QString f2, QByteArray &hash1);
   void startWorking();
+  bool determineTreeItemColor(QTreeWidgetItem *item);
 
   Ui::MainWindow *ui;
   QStringList m_fileNames;
   QString m_folder;
   int m_itemsCount;
+
+  const QString STR_NOT_FOUND;
 
 signals:
   void comparingComplete();

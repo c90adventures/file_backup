@@ -10,7 +10,8 @@
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
-  ui(new Ui::MainWindow)
+  ui(new Ui::MainWindow),
+  STR_NOT_FOUND("Not found.")
 {
   ui->setupUi(this);
   qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
@@ -41,8 +42,7 @@ int MainWindow::addItems(QDir a_dir, QTreeWidgetItem* a_parent)
 
   int itemsAdded = 0;
 
-  for (int i = 0; i < list.size(); ++i)
-  {
+  for (int i = 0; i < list.size(); ++i) {
     QFileInfo file = list.at(i);
 
     QTreeWidgetItem* child = NULL;
@@ -152,14 +152,13 @@ void MainWindow::startWorking()
 
       qDebug() << "Found " << sameFiles.size() << " same files for file " << (*treeIt)->text(0);
 
-      // what to do if multiple files have been found?
+      // what to do if multiple files have been found:
       QString str;
       if (sameFiles.size()) {
         str = tr("(%1) %2").arg(QString::number(sameFiles.size())).arg(sameFiles.join(", "));
       } else {
-        str = "Not found.";
+        str = STR_NOT_FOUND;
       }
-
 
       QMetaObject::invokeMethod(this, "setItemTextInTable", Qt::QueuedConnection, Q_ARG(QTreeWidgetItem*, (*treeIt)), Q_ARG(int, 1), Q_ARG(QString, str));
       QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
@@ -175,13 +174,35 @@ void MainWindow::startWorking()
 
 void MainWindow::colorizeResults()
 {
-  // I can either sent some model data from startWorking() (and be done with 'invokeMethod' calls)
-  // or I could go through treeWidgetItems again here
-
-  // Whole folder contents found - green. Else red.
-  // Files too.
+  for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++) {
+    determineTreeItemColor(ui->treeWidget->topLevelItem(i));
+  }
 }
 
+// if item is a file, decision is based on right column
+// else we call same func recursively for all our children.
+bool MainWindow::determineTreeItemColor(QTreeWidgetItem* item)
+{
+  bool amIGreen = false;
+  if (item->childCount()) {
+    bool allContentsGreen = true;
+    for (int i = 0; i < item->childCount(); i++) {
+      allContentsGreen = determineTreeItemColor(item->child(i)) && allContentsGreen;
+    }
+    amIGreen = allContentsGreen;
+  } else {
+    if (item->text(1).compare(STR_NOT_FOUND)) {
+      amIGreen = true;
+    }
+  }
+
+  if (amIGreen) {
+    item->setBackgroundColor(0, QColor(Qt::green));
+  } else {
+    item->setBackgroundColor(0, QColor(Qt::red));
+  }
+  return amIGreen;
+}
 
 void MainWindow::setItemTextInTable(QTreeWidgetItem* item, int col, QString str)
 {

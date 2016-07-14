@@ -1,5 +1,4 @@
-QT       += testlib qml
-QT       -= gui
+QT       += testlib gui
 
 INCLUDEPATH += ../src
 
@@ -9,7 +8,11 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-           mainwindowtest.cpp
+SOURCES += main.cpp \
+           mainwindowtest.cpp \
+           duplicatesfindertest.cpp \
+           ../src/duplicatesfinder.cpp
 
-HEADERS  += mainwindowtest.h
+HEADERS  += mainwindowtest.h \
+            duplicatesfindertest.h \
+            ../src/duplicatesfinder.h

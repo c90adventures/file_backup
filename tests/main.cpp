@@ -1,13 +1,15 @@
 #include <QtTest/QtTest>
 #include <iostream>
 #include "mainwindowtest.h"
+#include "duplicatesfindertest.h"
 
 int main(int argc, char *argv[])
 {
   Q_UNUSED(argc)
   Q_UNUSED(argv)
 
-  QList<QObject*> tests{new MainWindowTest()};
+  QList<QObject*> tests{new MainWindowTest(),
+                        new DuplicatesFinderTest()};
 
   bool failed = false;
 

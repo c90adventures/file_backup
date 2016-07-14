@@ -43,19 +43,35 @@ void DuplicatesFinder::addFilesToTheModel(QDir directory, QStandardItem* parent)
   }
 }
 
-void DuplicatesFinder::startWorking()
+void DuplicatesFinder::convertModelToAList(const QModelIndex &top, QList<QModelIndex> &list)
 {
-  QList<QModelIndex*> filesList;
-  int coresCount = QThread::idealThreadCount();
-
-  for(int row = 0; row < m_model.rowCount(); ++row) {
-    if (m_model.item(row, 0)->hasChildren() == false) {
-      filesList.push_back(new QModelIndex(m_model.index(row, 0))); // that's bad. also, that's a leak
-    }
+  if (!top.isValid() || top.data().isNull()) {
+    return;
   }
 
+  // m_model.rowCount(top)  -> this gives no of children of "top";
+
+  if (m_model.rowCount(top)) {
+    for (int r = 0; r < m_model.columnCount(top); r++) {
+      convertModelToAList(m_model.index(r, 0, top), list);
+    }
+  } else {
+    list.push_back(top);
+    convertModelToAList(top.sibling(top.row() + 1, top.column()), list);
+  }
+}
+
+void DuplicatesFinder::startWorking()
+{
+  QList<QModelIndex> filesList;
+  int coresCount = QThread::idealThreadCount();
+
+  convertModelToAList(m_model.item(0, 0)->index(), filesList);
+  qDebug() << filesList;
+
+
   int chunkSize = ceil(double(filesList.length()) / double(coresCount));
-  QList< QList<QModelIndex*> > splitFilesList;
+  QList< QList<QModelIndex> > splitFilesList;
   QList< QFuture<void> > futures;
   for (int i = 0; i < coresCount; i++) {
     splitFilesList.push_back(filesList.mid(i * chunkSize, chunkSize));
@@ -72,14 +88,14 @@ void DuplicatesFinder::startWorking()
   //emit comparingComplete();
 }
 
-void DuplicatesFinder::findDuplicates(QList<QModelIndex*> listOfItems)
+void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems)
 {
   for (int m = 0; m < listOfItems.length(); m++) {
-    QFileInfo qfi(listOfItems[m]->data().toString());
+    QFileInfo qfi(listOfItems[m].data().toString());
     if (!qfi.isDir()) {
 
       QStringList foundFiles;
-      qDebug() << "Searching for " << listOfItems[m]->data() << "...";
+      qDebug() << "Searching for " << qfi.absoluteFilePath() << "...";
 
       QDirIterator dirIt(m_folderToBeSearched, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
       //QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
@@ -92,12 +108,12 @@ void DuplicatesFinder::findDuplicates(QList<QModelIndex*> listOfItems)
       QStringList sameFiles;
       QByteArray hashOfSourceFile;
       for (int i = 0; i < foundFiles.size(); i++) {
-        if (compareFiles(listOfItems[m]->data().toString(), foundFiles[i], hashOfSourceFile)) {
+        if (compareFiles(qfi.absoluteFilePath(), foundFiles[i], hashOfSourceFile)) {
           sameFiles << foundFiles[i];
         }
       }
 
-      qDebug() << "Found " << sameFiles.size() << " same files for file " << listOfItems[m]->data();
+      qDebug() << "Found " << sameFiles.size() << " same files for file " << qfi.absoluteFilePath();
 
       // what to do if multiple files have been found:
       QString str;
@@ -107,7 +123,7 @@ void DuplicatesFinder::findDuplicates(QList<QModelIndex*> listOfItems)
         str = STR_NOT_FOUND;
       }
 
-      QModelIndex secondColumn = listOfItems[m]->sibling(listOfItems[m]->row(), listOfItems[m]->column() + 1);
+      QModelIndex secondColumn = listOfItems[m].sibling(listOfItems[m].row(), listOfItems[m].column() + 1);
       m_model.setData(secondColumn, str);
 //      QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
 //      itemsProcessed++;

@@ -1,0 +1,23 @@
+#ifndef DUPLICATESFINDERTEST_H
+#define DUPLICATESFINDERTEST_H
+
+#include <QtTest/QtTest>
+
+class DuplicatesFinderTest : public QObject
+{
+  Q_OBJECT
+public:
+  explicit DuplicatesFinderTest(QObject *parent = 0);
+
+signals:
+
+private slots:
+  void initTestCase();
+  void cleanupTestCase();
+
+  void benchmarkRecursive();
+  void benchmarkRegexp();
+
+};
+
+#endif // DUPLICATESFINDERTEST_H

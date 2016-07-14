@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //  qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
   qRegisterMetaType<QVector<int> >("QVector<int>");
   setWindowTitle(tr("%1, build from %2, %3").arg(STR_PROGRAM_NAME).arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
-  //connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
+  connect(m_duplicatesFinder, SIGNAL(comparingComplete(int, int)), this, SLOT(showResults(int, int)));
 
   this->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -88,6 +88,7 @@ void MainWindow::on_pbGo_clicked()
 
 void MainWindow::updateProgress(int id, int progress, int max)
 {
+  Q_UNUSED(max);
   m_processedFilesPerThread[id] = progress;
   int sum = 0;
   for (int i = 0; i < m_processedFilesPerThread.size(); ++i) {
@@ -96,45 +97,11 @@ void MainWindow::updateProgress(int id, int progress, int max)
   ui->progressBar->setValue(sum);
 }
 
-void MainWindow::colorizeResults()
+void MainWindow::showResults(int totalFiles, int notFoundFiles)
 {
-//  for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++) {
-//    determineTreeItemColor(ui->treeWidget->topLevelItem(i));
-//  }
-
-//  QMessageBox msgBox;
-//  msgBox.setText(tr("Searched for:\t%1 file(s).\nSuccesfully found:\t%2 file(s).\nCould not find:\t%3 file(s).")
-//      .arg(m_totalFilesCount).arg(m_totalFilesCount - m_notFoundCount).arg(m_notFoundCount));
-//  msgBox.setStandardButtons(QMessageBox::Ok);
-//  msgBox.exec();
-}
-
-// if item is a file, decision is based on right column
-// else we call same func recursively for all our children.
-bool MainWindow::determineTreeItemColor(QTreeWidgetItem* item)
-{
-//  bool amIGreen = false;
-//  if (item->childCount()) {
-//    bool allContentsGreen = true;
-//    for (int i = 0; i < item->childCount(); i++) {
-//      allContentsGreen = determineTreeItemColor(item->child(i)) && allContentsGreen;
-//    }
-//    amIGreen = allContentsGreen;
-//  } else {
-//    if (item->text(1).compare(STR_NOT_FOUND)) {
-//      amIGreen = true;
-//    }
-//  }
-
-//  if (amIGreen) {
-//    item->setBackgroundColor(0, m_foundColor);
-//  } else {
-//    item->setBackgroundColor(0, m_notFoundColor);
-//  }
-//  return amIGreen;
-}
-
-void MainWindow::setItemTextInTable(QTreeWidgetItem* item, int col, QString str)
-{
-//  item->setText(col, str);
+  QMessageBox msgBox;
+  msgBox.setText(tr("Searched for:\t%1 file(s).\nSuccesfully found:\t%2 file(s).\nCould not find:\t%3 file(s).")
+      .arg(totalFiles).arg(totalFiles - notFoundFiles).arg(notFoundFiles));
+  msgBox.setStandardButtons(QMessageBox::Ok);
+  msgBox.exec();
 }

@@ -23,12 +23,11 @@ private slots:
   void on_pb_setFolder_clicked();
   void on_pb_addFolderContents_clicked();
   void on_pbGo_clicked();
-  void setItemTextInTable(QTreeWidgetItem *item, int col, QString str);
-  void colorizeResults();
   void showContextMenu(const QPoint & pos);
   void showAbout();
 
   void updateProgress(int id, int progress, int max);
+  void showResults(int totalFiles, int notFoundFiles);
 
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);

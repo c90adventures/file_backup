@@ -128,7 +128,6 @@ int DuplicatesFinder::colorizeDirectoriesRecursive(const QModelIndex &top)
 void DuplicatesFinder::startWorking()
 {
   QList<QModelIndex> filesList = convertModelToAList();
-  qDebug() << filesList;
   int coresCount = QThread::idealThreadCount();
 
   int chunkSize = ceil(double(filesList.length()) / double(coresCount));

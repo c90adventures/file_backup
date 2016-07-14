@@ -10,6 +10,13 @@ DuplicatesFinder::DuplicatesFinder(QObject *parent)
   , STR_NOT_FOUND("Not found.")
 {
   m_model.setColumnCount(2);
+  m_model.setHorizontalHeaderItem(0, new QStandardItem(tr("Source file")));
+  m_model.setHorizontalHeaderItem(1, new QStandardItem(tr("Corresponding file")));
+
+  QSettings settings("./marched.ini", QSettings::IniFormat);
+  m_foundColor = QColor(settings.value("foundColor", "#449333").toString());
+  m_notFoundColor = QColor(settings.value("notFoundColor", "#FD0600").toString());
+
 }
 
 void DuplicatesFinder::addSourceFiles(QString sDirectory)
@@ -54,6 +61,7 @@ void DuplicatesFinder::convertModelToAList(const QModelIndex &top, QList<QModelI
   if (m_model.rowCount(top)) {
     for (int r = 0; r < m_model.columnCount(top); r++) {
       convertModelToAList(m_model.index(r, 0, top), list);
+      convertModelToAList(top.sibling(top.row() + 1, top.column()), list);
     }
   } else {
     list.push_back(top);
@@ -67,8 +75,6 @@ void DuplicatesFinder::startWorking()
   int coresCount = QThread::idealThreadCount();
 
   convertModelToAList(m_model.item(0, 0)->index(), filesList);
-  qDebug() << filesList;
-
 
   int chunkSize = ceil(double(filesList.length()) / double(coresCount));
   QList< QList<QModelIndex> > splitFilesList;
@@ -78,7 +84,7 @@ void DuplicatesFinder::startWorking()
   }
 
   for (int i = 0; i < coresCount; i++) {
-    futures.push_back(QtConcurrent::run(this, &DuplicatesFinder::findDuplicates, splitFilesList[i]));
+    futures.push_back(QtConcurrent::run(this, &DuplicatesFinder::findDuplicates, splitFilesList[i], i));
   }
 
   for (int i = 0; i < coresCount; i++) {
@@ -88,23 +94,23 @@ void DuplicatesFinder::startWorking()
   //emit comparingComplete();
 }
 
-void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems)
+void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems, int index)
 {
+  int filesProcessed = 0;
+
   for (int m = 0; m < listOfItems.length(); m++) {
     QFileInfo qfi(listOfItems[m].data().toString());
     if (!qfi.isDir()) {
-
       QStringList foundFiles;
-      qDebug() << "Searching for " << qfi.absoluteFilePath() << "...";
-
       QDirIterator dirIt(m_folderToBeSearched, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
+
       //QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
+
       while (dirIt.hasNext()) {
         dirIt.next();
         foundFiles << dirIt.filePath();
       }
 
-      qDebug() << "  comparing to " << foundFiles.size() << "files...";
       QStringList sameFiles;
       QByteArray hashOfSourceFile;
       for (int i = 0; i < foundFiles.size(); i++) {
@@ -113,20 +119,20 @@ void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems)
         }
       }
 
-      qDebug() << "Found " << sameFiles.size() << " same files for file " << qfi.absoluteFilePath();
-
       // what to do if multiple files have been found:
       QString str;
       if (sameFiles.size()) {
         str = tr("(%1) %2").arg(QString::number(sameFiles.size())).arg(sameFiles.join(", "));
+        m_model.setData(listOfItems[m], m_foundColor, Qt::BackgroundRole);
       } else {
         str = STR_NOT_FOUND;
+        m_model.setData(listOfItems[m], m_notFoundColor, Qt::BackgroundRole);
       }
 
       QModelIndex secondColumn = listOfItems[m].sibling(listOfItems[m].row(), listOfItems[m].column() + 1);
       m_model.setData(secondColumn, str);
-//      QMetaObject::invokeMethod(ui->progressBar, "setValue", Qt::QueuedConnection, Q_ARG(int, itemsProcessed));
-//      itemsProcessed++;
+
+      emit reportProgress(index, ++filesProcessed, listOfItems.length());
     } // if (!qfi.isDir())
   }
 }

@@ -16,15 +16,12 @@ MainWindow::MainWindow(QWidget *parent) :
   ui(new Ui::MainWindow),
   STR_PROGRAM_NAME("Ed's duplicate files finder")
 {
-  QSettings settings("./marched.ini", QSettings::IniFormat);
-  m_foundColor = QColor(settings.value("foundColor", "#449333").toString());
-  m_notFoundColor = QColor(settings.value("notFoundColor", "#FD0600").toString());
-
   m_duplicatesFinder = new DuplicatesFinder(this);
 
   ui->setupUi(this);
   ui->treeView->setModel(&m_duplicatesFinder->m_model);
 //  qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
+  qRegisterMetaType<QVector<int> >("QVector<int>");
   setWindowTitle(tr("%1, build from %2, %3").arg(STR_PROGRAM_NAME).arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
   connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
 
@@ -83,9 +80,21 @@ void MainWindow::on_pb_setFolder_clicked()
 
 void MainWindow::on_pbGo_clicked()
 {
+  ui->progressBar->setMaximum(m_duplicatesFinder->m_filesCount);
+  connect(m_duplicatesFinder, SIGNAL(reportProgress(int,int,int)), this, SLOT(updateProgress(int,int,int)));
+  m_processedFilesPerThread.resize(QThread::idealThreadCount());
   QtConcurrent::run(m_duplicatesFinder, &DuplicatesFinder::startWorking);
 }
 
+void MainWindow::updateProgress(int id, int progress, int max)
+{
+  m_processedFilesPerThread[id] = progress;
+  int sum = 0;
+  for (int i = 0; i < m_processedFilesPerThread.size(); ++i) {
+    sum += m_processedFilesPerThread[i];
+  }
+  ui->progressBar->setValue(sum);
+}
 
 void MainWindow::colorizeResults()
 {

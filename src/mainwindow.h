@@ -28,6 +28,8 @@ private slots:
   void showContextMenu(const QPoint & pos);
   void showAbout();
 
+  void updateProgress(int id, int progress, int max);
+
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
   bool determineTreeItemColor(QTreeWidgetItem *item);
@@ -36,7 +38,7 @@ private:
   DuplicatesFinder *m_duplicatesFinder;
   QStringList m_fileNames;
   int m_itemsCount, m_notFoundCount, m_totalFilesCount;
-  QColor m_foundColor, m_notFoundColor;
+  QVector<int> m_processedFilesPerThread;
 
   const QString STR_PROGRAM_NAME;
 

@@ -1,5 +1,4 @@
-QT       += testlib qml
-QT       -= gui
+QT       += testlib widgets gui
 
 INCLUDEPATH += ../src
 
@@ -9,7 +8,11 @@ CONFIG   -= app_bundle
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-           mainwindowtest.cpp
+SOURCES += main.cpp \
+           mainwindowtest.cpp \
+           ../src/mainwindow.cpp
 
-HEADERS  += mainwindowtest.h
+HEADERS  += mainwindowtest.h \
+            ../src/mainwindow.h
+
+FORMS   += ../src/mainwindow.ui

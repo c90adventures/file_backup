@@ -12,6 +12,7 @@ namespace Ui {
 
 class MainWindow : public QMainWindow
 {
+  friend class MainWindowTest;
   Q_OBJECT
 
 public:

@@ -1,13 +1,14 @@
 #include <QtTest/QtTest>
 #include <iostream>
+#include "mainwindow.h"
 #include "mainwindowtest.h"
 
 int main(int argc, char *argv[])
 {
-  Q_UNUSED(argc)
-  Q_UNUSED(argv)
+  QApplication a(argc, argv);
+  MainWindow m;
 
-  QList<QObject*> tests{new MainWindowTest()};
+  QList<QObject*> tests{new MainWindowTest(NULL, &m)};
 
   bool failed = false;
 
@@ -24,5 +25,5 @@ int main(int argc, char *argv[])
 
   qDeleteAll(tests);
   tests.clear();
-  return 0;
+  return a.exec();
 }

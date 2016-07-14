@@ -3,16 +3,19 @@
 
 #include <QtTest/QtTest>
 
+#include "mainwindow.h"
+
 class MainWindowTest : public QObject
 {
   Q_OBJECT
 public:
-  explicit MainWindowTest(QObject *parent = 0);
-
+  explicit MainWindowTest(QObject *parent , MainWindow *am);
+  MainWindow *m;
 signals:
 
 private slots:
   void initTestCase();
+  void theBenchmark();
   void cleanupTestCase();
 };
 

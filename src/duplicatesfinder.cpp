@@ -50,35 +50,90 @@ void DuplicatesFinder::addFilesToTheModel(QDir directory, QStandardItem* parent)
   }
 }
 
-void DuplicatesFinder::convertModelToAList(const QModelIndex &top, QList<QModelIndex> &list)
+
+// generates a list of all files (not folders) in the model
+QList<QModelIndex> DuplicatesFinder::convertModelToAList()
+{
+  qDebug() << Q_FUNC_INFO << m_model.rowCount(m_model.item(0, 0)->index());
+
+  QList<QModelIndex> retList;
+  for (int i = 0; i < m_model.rowCount(); i++) {
+    QList<QModelIndex> filesList;
+    convertModelToAListRecursive(m_model.item(i, 0)->index(), filesList);
+    retList.append(filesList);
+  }
+  return retList;
+}
+
+// recursively scans tree and populates list with files only
+void DuplicatesFinder::convertModelToAListRecursive(const QModelIndex &top, QList<QModelIndex> &list)
 {
   if (!top.isValid() || top.data().isNull()) {
     return;
   }
 
-  // m_model.rowCount(top)  -> this gives no of children of "top";
-
+  // m_model.rowCount(top)  -> this gives number of children of "top";
   if (m_model.rowCount(top)) {
-    for (int r = 0; r < m_model.columnCount(top); r++) {
-      convertModelToAList(m_model.index(r, 0, top), list);
-      convertModelToAList(top.sibling(top.row() + 1, top.column()), list);
+    for (int r = 0; r < m_model.rowCount(top); r++) {
+      convertModelToAListRecursive(m_model.index(r, 0, top), list);
     }
   } else {
     list.push_back(top);
-    convertModelToAList(top.sibling(top.row() + 1, top.column()), list);
   }
+}
+
+
+void DuplicatesFinder::colorizeDirectories()
+{
+  for (int i = 0; i < m_model.rowCount(); i++) {
+    int notFoundCounter = colorizeDirectoriesRecursive(m_model.item(i, 0)->index());
+
+    if (notFoundCounter > 0 && m_model.rowCount(m_model.item(i, 0)->index())) {
+      m_model.setData(m_model.item(i, 0)->index(), m_notFoundColor, Qt::BackgroundRole);
+      m_model.setData(m_model.item(i, 1)->index(), tr("%1 file(s) missing").arg(notFoundCounter));
+    } else if (m_model.rowCount(m_model.item(i, 0)->index())) {
+      m_model.setData(m_model.item(i, 0)->index(), m_foundColor, Qt::BackgroundRole);
+    }
+  }
+}
+
+// recursive
+int DuplicatesFinder::colorizeDirectoriesRecursive(const QModelIndex &top)
+{
+  if (!top.isValid() || top.data().isNull()) {
+    return 0;
+  }
+
+  int howManyChildrenNotFound = 0;
+
+  if (m_model.rowCount(top)) {
+    for (int r = 0; r < m_model.rowCount(top); r++) {
+      howManyChildrenNotFound += colorizeDirectoriesRecursive(m_model.index(r, 0, top));  // this handles insides of current dir
+    }
+    // decide on color here
+    if (howManyChildrenNotFound) {
+      m_model.setData(top, m_notFoundColor, Qt::BackgroundRole);
+      m_model.setData(top.sibling(top.row(), top.column()+1), tr("%1 file(s) missing").arg(howManyChildrenNotFound));
+    } else {
+      m_model.setData(top, m_foundColor, Qt::BackgroundRole);
+    }
+  } else {
+    if (top.sibling(top.row(), top.column() + 1).data().toString().compare(STR_NOT_FOUND) == 0) {
+      howManyChildrenNotFound++;
+    }
+  }
+  return howManyChildrenNotFound;
 }
 
 void DuplicatesFinder::startWorking()
 {
-  QList<QModelIndex> filesList;
+  QList<QModelIndex> filesList = convertModelToAList();
+  qDebug() << filesList;
   int coresCount = QThread::idealThreadCount();
-
-  convertModelToAList(m_model.item(0, 0)->index(), filesList);
 
   int chunkSize = ceil(double(filesList.length()) / double(coresCount));
   QList< QList<QModelIndex> > splitFilesList;
-  QList< QFuture<void> > futures;
+  QList< QFuture<int> > futures;
   for (int i = 0; i < coresCount; i++) {
     splitFilesList.push_back(filesList.mid(i * chunkSize, chunkSize));
   }
@@ -87,16 +142,24 @@ void DuplicatesFinder::startWorking()
     futures.push_back(QtConcurrent::run(this, &DuplicatesFinder::findDuplicates, splitFilesList[i], i));
   }
 
+  int notFoundCount = 0;
   for (int i = 0; i < coresCount; i++) {
     futures[i].waitForFinished();
+    notFoundCount += futures[i].result();
   }
 
-  //emit comparingComplete();
+  // now all the files are properly colord - but not directories!
+  colorizeDirectories();
+
+
+  emit comparingComplete(m_filesCount, notFoundCount);
 }
 
-void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems, int index)
+// returns number of files that were not found
+int DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems, int index)
 {
   int filesProcessed = 0;
+  int notFoundCounter = 0;
 
   for (int m = 0; m < listOfItems.length(); m++) {
     QFileInfo qfi(listOfItems[m].data().toString());
@@ -126,6 +189,7 @@ void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems, int index)
         m_model.setData(listOfItems[m], m_foundColor, Qt::BackgroundRole);
       } else {
         str = STR_NOT_FOUND;
+        notFoundCounter++;
         m_model.setData(listOfItems[m], m_notFoundColor, Qt::BackgroundRole);
       }
 
@@ -135,6 +199,7 @@ void DuplicatesFinder::findDuplicates(QList<QModelIndex> listOfItems, int index)
       emit reportProgress(index, ++filesProcessed, listOfItems.length());
     } // if (!qfi.isDir())
   }
+  return notFoundCounter;
 }
 
 QByteArray DuplicatesFinder::getFileHash(QFile &file)

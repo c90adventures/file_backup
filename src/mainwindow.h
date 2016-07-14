@@ -43,7 +43,6 @@ private:
   const QString STR_PROGRAM_NAME;
 
 signals:
-  void comparingComplete();
 };
 
 #endif // MAINWINDOW_H

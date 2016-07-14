@@ -34,7 +34,7 @@ void DuplicatesFinderTest::benchmarkRecursive()
   QList<QModelIndex> filesList;
 
   QBENCHMARK {
-      df->convertModelToAList(df->m_model.item(0, 0)->index(), filesList);
+      filesList = df->convertModelToAList();
   }
 }
 

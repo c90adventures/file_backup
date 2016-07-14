@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //  qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
   qRegisterMetaType<QVector<int> >("QVector<int>");
   setWindowTitle(tr("%1, build from %2, %3").arg(STR_PROGRAM_NAME).arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
-  connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
+  //connect(this, SIGNAL(comparingComplete()), this, SLOT(colorizeResults()));
 
   this->setContextMenuPolicy(Qt::CustomContextMenu);
 

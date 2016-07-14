@@ -5,6 +5,7 @@
 #include <QDir>
 
 class QTreeWidgetItem;
+class DuplicatesFinder;
 
 namespace Ui {
   class MainWindow;
@@ -29,19 +30,15 @@ private slots:
 
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
-  QByteArray getFileHash(QFile &file);
-  bool compareFiles(QString f1, QString f2, QByteArray &hash1);
-  void startWorking();  
-  void findDuplicates(QList<QTreeWidgetItem*> listOfItems);
   bool determineTreeItemColor(QTreeWidgetItem *item);
 
   Ui::MainWindow *ui;
+  DuplicatesFinder *m_duplicatesFinder;
   QStringList m_fileNames;
-  QString m_folder;
   int m_itemsCount, m_notFoundCount, m_totalFilesCount;
   QColor m_foundColor, m_notFoundColor;
 
-  const QString STR_NOT_FOUND, STR_PROGRAM_NAME;
+  const QString STR_PROGRAM_NAME;
 
 signals:
   void comparingComplete();

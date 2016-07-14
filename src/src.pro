@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    duplicatesfinder.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    duplicatesfinder.h
 
 FORMS    += mainwindow.ui

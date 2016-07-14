@@ -5,6 +5,7 @@
 DuplicatesFinderTest::DuplicatesFinderTest(QObject *parent) :
   QObject(parent)
   {
+  qRegisterMetaType<QVector<int> >("QVector<int>");
   }
 
 void DuplicatesFinderTest::initTestCase()
@@ -13,6 +14,17 @@ void DuplicatesFinderTest::initTestCase()
 
 void DuplicatesFinderTest::cleanupTestCase()
   {  }
+
+void DuplicatesFinderTest::benchmarkAll()
+{
+  DuplicatesFinder df;
+  QBENCHMARK {
+    df.addSourceFiles(QDir::currentPath());
+    df.m_folderToBeSearched = QDir::homePath();
+
+    df.startWorking();
+  }
+}
 
 void DuplicatesFinderTest::benchmarkRecursive()
 {

@@ -18,6 +18,8 @@ private slots:
   void benchmarkRecursive();
   void benchmarkRegexp();
 
+  void benchmarkAll();
+
 };
 
 #endif // DUPLICATESFINDERTEST_H

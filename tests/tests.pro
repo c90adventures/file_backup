@@ -9,10 +9,9 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-           mainwindowtest.cpp \
            duplicatesfindertest.cpp \
            ../src/duplicatesfinder.cpp
 
-HEADERS  += mainwindowtest.h \
+HEADERS  += \
             duplicatesfindertest.h \
             ../src/duplicatesfinder.h

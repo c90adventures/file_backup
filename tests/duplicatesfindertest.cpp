@@ -31,7 +31,7 @@ void DuplicatesFinderTest::benchmarkRecursive()
   DuplicatesFinder *df = new DuplicatesFinder();
 //  df->addSourceFiles(QDir::homePath());
   df->addSourceFiles(QDir::currentPath());
-  QList<QModelIndex> filesList;
+  QList<QPersistentModelIndex> filesList;
 
   QBENCHMARK {
       filesList = df->convertModelToAList();

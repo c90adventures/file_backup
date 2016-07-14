@@ -24,12 +24,12 @@ public:
 
 private:
   void addFilesToTheModel(QDir directory, QStandardItem* parent);
-  int findDuplicates(QList<QModelIndex> listOfItems, int index);
+  int findDuplicates(QList<QPersistentModelIndex> listOfItems, int index);
   QByteArray getFileHash(QFile &file);
   bool compareFiles(QString f1, QString f2, QByteArray &hash1);
 
-  QList<QModelIndex> convertModelToAList();
-  void convertModelToAListRecursive(const QModelIndex &top, QList<QModelIndex> &list);
+  QList<QPersistentModelIndex> convertModelToAList();
+  void convertModelToAListRecursive(const QModelIndex &top, QList<QPersistentModelIndex> &list);
   void colorizeDirectories();
   int colorizeDirectoriesRecursive(const QModelIndex &top);
 

@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
   ui->treeView->setModel(&m_duplicatesFinder->m_model);
 //  qRegisterMetaType<QTreeWidgetItem*>("QTreeWidgetItem*");
   qRegisterMetaType<QVector<int> >("QVector<int>");
+  qRegisterMetaType<QList<QPersistentModelIndex> >("QList<QPersistentModelIndex>");
   setWindowTitle(tr("%1, build from %2, %3").arg(STR_PROGRAM_NAME).arg(QString::fromLocal8Bit(__DATE__)).arg(QString::fromLocal8Bit(__TIME__)));
   connect(m_duplicatesFinder, SIGNAL(comparingComplete(int, int)), this, SLOT(showResults(int, int)));
 

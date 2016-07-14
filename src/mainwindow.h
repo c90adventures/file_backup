@@ -5,6 +5,7 @@
 #include <QDir>
 
 class QTreeWidgetItem;
+class DuplicatesFinder;
 
 namespace Ui {
   class MainWindow;
@@ -23,29 +24,25 @@ private slots:
   void on_pb_setFolder_clicked();
   void on_pb_addFolderContents_clicked();
   void on_pbGo_clicked();
-  void setItemTextInTable(QTreeWidgetItem *item, int col, QString str);
-  void colorizeResults();
   void showContextMenu(const QPoint & pos);
   void showAbout();
 
+  void updateProgress(int id, int progress, int max);
+  void showResults(int totalFiles, int notFoundFiles);
+
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
-  QByteArray getFileHash(QFile &file);
-  bool compareFiles(QString f1, QString f2, QByteArray &hash1);
-  void startWorking();  
-  void findDuplicates(QList<QTreeWidgetItem*> listOfItems);
   bool determineTreeItemColor(QTreeWidgetItem *item);
 
   Ui::MainWindow *ui;
+  DuplicatesFinder *m_duplicatesFinder;
   QStringList m_fileNames;
-  QString m_folder;
   int m_itemsCount, m_notFoundCount, m_totalFilesCount;
-  QColor m_foundColor, m_notFoundColor;
+  QVector<int> m_processedFilesPerThread;
 
-  const QString STR_NOT_FOUND, STR_PROGRAM_NAME;
+  const QString STR_PROGRAM_NAME;
 
 signals:
-  void comparingComplete();
 };
 
 #endif // MAINWINDOW_H

@@ -1,4 +1,4 @@
-QT       += testlib widgets gui
+QT       += testlib gui
 
 INCLUDEPATH += ../src
 
@@ -10,9 +10,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
            mainwindowtest.cpp \
-           ../src/mainwindow.cpp
+           duplicatesfindertest.cpp \
+           ../src/duplicatesfinder.cpp
 
 HEADERS  += mainwindowtest.h \
-            ../src/mainwindow.h
-
-FORMS   += ../src/mainwindow.ui
+            duplicatesfindertest.h \
+            ../src/duplicatesfinder.h

@@ -20,8 +20,15 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetNoConstraint</enum>
       </property>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pb_addFolderContents">
+        <property name="text">
+         <string>Add folder...</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="0" rowspan="3" colspan="2">
-       <widget class="QTreeWidget" name="treeWidget">
+       <widget class="QTreeView" name="treeView">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -30,29 +37,6 @@
         </property>
         <property name="horizontalScrollBarPolicy">
          <enum>Qt::ScrollBarAlwaysOn</enum>
-        </property>
-        <property name="columnCount">
-         <number>2</number>
-        </property>
-        <attribute name="headerDefaultSectionSize">
-         <number>300</number>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Path</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Corresponding file</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QPushButton" name="pb_addFolderContents">
-        <property name="text">
-         <string>Add folder...</string>
         </property>
        </widget>
       </item>

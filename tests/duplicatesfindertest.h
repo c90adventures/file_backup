@@ -12,13 +12,14 @@ public:
 signals:
 
 private slots:
-  void initTestCase();
-  void cleanupTestCase();
 
-  void benchmarkRecursive();
-  void benchmarkRegexp();
+  void benchmarkFileSearch_data();
+  void benchmarkFileSearch();
 
-  void benchmarkAll();
+//  void benchmarkRecursive();
+//  void benchmarkRegexp();
+
+//  void benchmarkAll();
 
 };
 

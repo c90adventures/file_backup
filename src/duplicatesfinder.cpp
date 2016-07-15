@@ -136,6 +136,14 @@ void DuplicatesFinder::startWorking()
     splitFilesList.push_back(filesList.mid(i * chunkSize, chunkSize));
   }
 
+  // prepare QMultiHash with all files in folderToBeSearched
+  m_filesHashtable.clear();
+  QDirIterator dirIt(m_folderToBeSearched, QDir::Files, QDirIterator::Subdirectories);
+  while (dirIt.hasNext()) {
+    dirIt.next();
+    m_filesHashtable.insert(dirIt.fileName(), dirIt.filePath());
+  }
+
   for (int i = 0; i < coresCount; i++) {
     futures.push_back(QtConcurrent::run(this, &DuplicatesFinder::findDuplicates, splitFilesList[i], i));
   }
@@ -170,15 +178,7 @@ int DuplicatesFinder::findDuplicates(QList<QPersistentModelIndex> listOfItems, i
 
     QFileInfo qfi(listOfItems[m].data().toString());
     if (!qfi.isDir()) {
-      QStringList foundFiles;
-      QDirIterator dirIt(m_folderToBeSearched, QStringList(qfi.fileName()), QDir::Files, QDirIterator::Subdirectories);
-
-      //QMetaObject::invokeMethod(statusBar(), "showMessage", Qt::QueuedConnection, Q_ARG(QString, tr("Searching for %1...").arg(qfi.fileName())));
-
-      while (dirIt.hasNext()) {
-        dirIt.next();
-        foundFiles << dirIt.filePath();
-      }
+      QStringList foundFiles = m_filesHashtable.values(qfi.fileName());
 
       QStringList sameFiles;
       QByteArray hashOfSourceFile;

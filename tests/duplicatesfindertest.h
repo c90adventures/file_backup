@@ -13,13 +13,13 @@ signals:
 
 private slots:
 
-  void benchmarkFileSearch_data();
-  void benchmarkFileSearch();
+//  void benchmarkFileSearch_data();
+//  void benchmarkFileSearch();
 
 //  void benchmarkRecursive();
 //  void benchmarkRegexp();
 
-//  void benchmarkAll();
+  void benchmarkAll();
 
 };
 

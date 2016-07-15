@@ -35,7 +35,8 @@ private:
   int colorizeDirectoriesRecursive(const QModelIndex &top);
 
   const QString STR_NOT_FOUND;
-  QColor m_foundColor, m_notFoundColor;
+  QColor m_foundColor, m_notFoundColor;  
+  QMultiHash<QString,QString> m_filesHashtable;  // filename, filepath
 
 signals:
   void reportProgress(int id, int progress, int max);

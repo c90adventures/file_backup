@@ -32,6 +32,8 @@ private slots:
 
   void on_pbCancel_clicked();
 
+  void on_pbClearSourceFiles_clicked();
+
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
   bool determineTreeItemColor(QTreeWidgetItem *item);

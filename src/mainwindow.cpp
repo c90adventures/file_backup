@@ -94,6 +94,7 @@ void MainWindow::on_pbGo_clicked()
 
     ui->pbGo->setEnabled(false);
     ui->pbCancel->setEnabled(true);
+    ui->pbClearSourceFiles->setEnabled(false);
     statusBar()->showMessage(tr("Working in %1 thread(s)...").arg(QThread::idealThreadCount()));
   } else {
     statusBar()->showMessage(tr("Add some source files first!"));
@@ -126,6 +127,7 @@ void MainWindow::showResults(int totalFiles, int notFoundFiles)
   ui->pbCancel->setText(tr("Cancel"));
   ui->pbGo->setEnabled(true);
   ui->pbCancel->setEnabled(false);
+  ui->pbClearSourceFiles->setEnabled(true);
 }
 
 void MainWindow::on_pbCancel_clicked()
@@ -134,4 +136,9 @@ void MainWindow::on_pbCancel_clicked()
   ui->statusBar->showMessage(ui->pbCancel->text());
   ui->pbCancel->setEnabled(false);
   m_duplicatesFinder->m_cancelled = true;
+}
+
+void MainWindow::on_pbClearSourceFiles_clicked()
+{
+  m_duplicatesFinder->m_model.clear();
 }

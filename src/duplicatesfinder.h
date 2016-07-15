@@ -21,6 +21,7 @@ public:
   QStandardItemModel m_model;
   QString m_folderToBeSearched;
   int m_filesCount;
+  bool m_cancelled;
 
 private:
   void addFilesToTheModel(QDir directory, QStandardItem* parent);

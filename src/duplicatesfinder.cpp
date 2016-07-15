@@ -51,12 +51,9 @@ void DuplicatesFinder::addFilesToTheModel(QDir directory, QStandardItem* parent)
   }
 }
 
-
 // generates a list of all files (not folders) in the model
 QList<QPersistentModelIndex> DuplicatesFinder::convertModelToAList()
 {
-  qDebug() << Q_FUNC_INFO << m_model.rowCount(m_model.item(0, 0)->index());
-
   QList<QPersistentModelIndex> retList;
   for (int i = 0; i < m_model.rowCount(); i++) {
     QList<QPersistentModelIndex> filesList;
@@ -128,6 +125,7 @@ int DuplicatesFinder::colorizeDirectoriesRecursive(const QModelIndex &top)
 
 void DuplicatesFinder::startWorking()
 {
+  m_cancelled = false;
   QList<QPersistentModelIndex> filesList = convertModelToAList();
   int coresCount = QThread::idealThreadCount();
 
@@ -144,6 +142,10 @@ void DuplicatesFinder::startWorking()
 
   int notFoundCount = 0;
   for (int i = 0; i < coresCount; i++) {
+    if (m_cancelled) {
+      emit comparingComplete(-1, -1);
+      return;
+    }
     futures[i].waitForFinished();
     notFoundCount += futures[i].result();
   }
@@ -155,12 +157,17 @@ void DuplicatesFinder::startWorking()
 }
 
 // returns number of files that were not found
+// this function should be run in a separate thread.
 int DuplicatesFinder::findDuplicates(QList<QPersistentModelIndex> listOfItems, int index)
 {
   int filesProcessed = 0;
   int notFoundCounter = 0;
 
   for (int m = 0; m < listOfItems.length(); m++) {
+    if (m_cancelled) {
+      return -1;
+    }
+
     QFileInfo qfi(listOfItems[m].data().toString());
     if (!qfi.isDir()) {
       QStringList foundFiles;

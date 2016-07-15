@@ -30,6 +30,8 @@ private slots:
   void updateProgress(int id, int progress, int max);
   void showResults(int totalFiles, int notFoundFiles);
 
+  void on_pbCancel_clicked();
+
 private:
   int addItems(QDir a_dir, QTreeWidgetItem* a_parent);
   bool determineTreeItemColor(QTreeWidgetItem *item);
